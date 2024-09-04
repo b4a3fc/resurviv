@@ -349,7 +349,7 @@ export class WeaponManager {
 
         const conditions = [
             this.player.inventory[weaponDef.ammo] == undefined,
-            this.player.actionType == (GameConfig.Action.UseItem as number),
+            this.player.actionType == GameConfig.Action.UseItem,
             this.weapons[this.curWeapIdx].ammo >=
                 this.getTrueAmmoStats(weaponDef).trueMaxClip,
             this.player.inventory[weaponDef.ammo] == 0 && !this.isInfinite(weaponDef),
@@ -597,6 +597,11 @@ export class WeaponManager {
 
         const hasExplosive = this.player.hasPerk("explosive");
         const hasSplinter = this.player.hasPerk("splinter");
+        const shouldApplyChambered =
+            this.player.hasPerk("chambered") &&
+            itemDef.bulletCount === 1 &&
+            (weapon.ammo === 0 ||
+                weapon.ammo === this.getTrueAmmoStats(itemDef).trueMaxClip - 1);
 
         // Movement spread
         let spread = itemDef.shotSpread ?? 0;
@@ -657,6 +662,8 @@ export class WeaponManager {
                 damageMult *= 1.08;
             } else if (this.player.lastBreathActive) {
                 damageMult *= 1.08;
+            } else if (shouldApplyChambered) {
+                damageMult *= 1.25;
             }
 
             const params: BulletParams = {
@@ -672,8 +679,9 @@ export class WeaponManager {
                 damageMult,
                 shotFx: i === 0,
                 shotOffhand: offHand,
-                trailSaturated: this.isBulletSaturated(),
+                trailSaturated: this.isBulletSaturated() || shouldApplyChambered,
                 trailSmall: false,
+                trailThick: shouldApplyChambered,
                 reflectCount: 0,
                 splinter: hasSplinter,
                 // reflectObjId: this.player.linkedObstacleId,
@@ -925,28 +933,48 @@ export class WeaponManager {
 
     throwThrowable(): void {
         this.cookingThrowable = false;
-        const throwableType = this.weapons[GameConfig.WeaponSlot.Throwable].type;
-        const throwableDef = GameObjectDefs[throwableType];
+        //need to store this incase throwableType gets replaced with its "heavy" variant like snowball => snowball_heavy
+        //used to manage inventory since snowball_heavy isnt stored in inventory, when it's thrown you decrement "snowball" from inv
+        const oldThrowableType = this.weapons[GameConfig.WeaponSlot.Throwable].type;
+
+        let throwableType = this.weapons[GameConfig.WeaponSlot.Throwable].type;
+        let throwableDef = GameObjectDefs[throwableType];
         assert(throwableDef.type === "throwable");
 
-        //if selected weapon slot is not throwable, that means player switched slots early and velocity needs to be 0
-        const throwStr =
-            this.curWeapIdx == GameConfig.WeaponSlot.Throwable
-                ? math.clamp(
-                      this.player.toMouseLen,
-                      0,
-                      GameConfig.player.throwableMaxMouseDist * 1.8,
-                  ) / 15
-                : 0;
+        if (throwableDef.heavyType && throwableDef.changeTime) {
+            if (this.cookTicker >= throwableDef.changeTime) {
+                throwableType = throwableDef.heavyType;
+                throwableDef = GameObjectDefs[throwableType] as ThrowableDef;
+            }
+        }
+        assert(throwableDef.type === "throwable");
+
+        let multiplier: number;
+        if (throwableDef.forceMaxThrowDistance) {
+            multiplier = 1;
+        } else if (this.curWeapIdx != GameConfig.WeaponSlot.Throwable) {
+            //if selected weapon slot is not throwable, that means player switched slots early and velocity needs to be 0
+            multiplier = 0;
+        } else {
+            //default throw strength algorithm, just based on mouse distance from player
+            multiplier =
+                math.clamp(
+                    this.player.toMouseLen,
+                    0,
+                    GameConfig.player.throwableMaxMouseDist * 1.8,
+                ) / 15;
+        }
+
+        const throwStr = multiplier * throwableDef.throwPhysics.speed;
 
         const weapSlotId = GameConfig.WeaponSlot.Throwable;
-        if (this.player.inventory[throwableType] > 0) {
-            this.player.inventory[throwableType] -= 1;
+        if (this.player.inventory[oldThrowableType] > 0) {
+            this.player.inventory[oldThrowableType] -= 1;
 
             // if throwable count drops below 0
             // show the next throwable
             // if theres none switch to last weapon
-            if (this.player.inventory[throwableType] == 0) {
+            if (this.player.inventory[oldThrowableType] == 0) {
                 this.showNextThrowable();
                 if (this.weapons[weapSlotId].type === "") {
                     this.setCurWeapIndex(this.lastWeaponIdx);
@@ -977,12 +1005,11 @@ export class WeaponManager {
             dir = v2.normalizeSafe(v2.sub(aimTarget, pos), v2.create(1.0, 0.0));
         }
 
-        const throwPhysicsSpeed = throwableDef.throwPhysics.speed;
-
         // Incorporate some of the player motion into projectile velocity
         const vel = v2.add(
             v2.mul(this.player.moveVel, throwableDef.throwPhysics.playerVelMult),
-            v2.mul(dir, throwPhysicsSpeed * throwStr),
+            //player mouse position is irrelevant for max throwing distance
+            v2.mul(dir, throwStr),
         );
 
         const fuseTime = math.max(

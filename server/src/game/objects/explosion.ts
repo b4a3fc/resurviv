@@ -98,11 +98,30 @@ export class ExplosionBarn {
                             obj.__type === ObjectType.Obstacle
                         ) {
                             let damage = def.damage;
-                            if (
-                                obj.__type == ObjectType.Player &&
-                                obj.hasPerk("flak_jacket")
-                            ) {
-                                damage *= 0.1;
+
+                            if (obj.__type == ObjectType.Player) {
+                                if (obj.hasPerk("flak_jacket")) {
+                                    damage *= 0.1;
+                                }
+
+                                if (def.freezeAmount && def.freezeDuration) {
+                                    const isSourceTeammate =
+                                        explosion.source &&
+                                        explosion.source.__type == ObjectType.Player &&
+                                        explosion.source.teamId == obj.teamId;
+                                    if (!isSourceTeammate) {
+                                        obj.dropRandomLoot();
+                                        const colAngle = math.rad2degFromDirection(
+                                            -collision.dir.y,
+                                            collision.dir.x,
+                                        );
+
+                                        obj.freeze(
+                                            Math.floor(colAngle / 120), //TODO: make dividend dynamic based on num frozen sprites
+                                            def.freezeDuration,
+                                        );
+                                    }
+                                }
                             }
 
                             if (dist > def.rad.min) {

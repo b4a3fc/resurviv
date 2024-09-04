@@ -1,3 +1,9 @@
+export enum TeamMode {
+    Solo = 1,
+    Duo = 2,
+    Squad = 4,
+}
+
 export enum EmoteSlot {
     Top,
     Right,
@@ -151,6 +157,7 @@ export const GameConfig = {
         moveSpeed: 12,
         waterSpeedPenalty: 3,
         cookSpeedPenalty: 3,
+        projectileHitPenalty: 3,
         hasteSpeedBonus: 4.8,
         bleedTickRate: 1,
         downedMoveSpeed: 4,
@@ -198,7 +205,7 @@ export const GameConfig = {
                 "308sub": 0,
                 flare: 0,
                 "45acp": 0,
-                frag: 0,
+                frag: 4,
                 smoke: 0,
                 strobe: 0,
                 mirv: 0,
