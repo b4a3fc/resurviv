@@ -13,6 +13,7 @@ export interface Events {
     playerDamage: PlayerDamageEvent;
     playerKill: Omit<PlayerDamageEvent, "amount">;
     gameCreated: Game;
+    playerGotKillKnockOrRevived: Player;
 }
 
 export type EventType = keyof Events;

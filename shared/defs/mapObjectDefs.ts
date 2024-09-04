@@ -8643,7 +8643,10 @@ export const MapObjectDefs: Record<string, MapObjectDef> = {
     case_07: createCase({
         health: 200,
         img: { sprite: "map-case-ring-01.img" },
-        loot: [tierLoot("tier_ring_case", 1, 1)],
+        loot: [
+            autoLoot("helmet03_bugler", 1),
+            tierLoot("tier_ring_case", 1, 1),
+        ],
         hitParticle: "blackChip",
         map: { display: false, color: 7025920, scale: 0.85 },
     }),
@@ -8697,6 +8700,7 @@ export const MapObjectDefs: Record<string, MapObjectDef> = {
         health: 200,
         img: { sprite: "map-case-basement-01.img" },
         loot: [
+            autoLoot("helmet03_grenadier", 1),
             tierLoot("tier_noir_outfit", 1, 1),
             tierLoot("tier_chest_04", 1, 1),
             autoLoot("9mm", 300),

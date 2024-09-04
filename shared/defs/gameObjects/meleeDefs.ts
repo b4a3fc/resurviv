@@ -457,7 +457,7 @@ const BaseDefs: Record<string, MeleeDef> = {
         cleave: true,
         autoAttack: false,
         switchDelay: 0.25,
-        damage: 44,
+        damage: 30, //44
         obstacleDamage: 1,
         headshotMult: 1,
         noPotatoSwap: true,
@@ -523,8 +523,8 @@ const BaseDefs: Record<string, MeleeDef> = {
                 y: 0,
             },
             rad: 1,
-            damageTimes: [0.18],
-            cooldownTime: 0.36,
+            damageTimes: [0.18 * 0.8],
+            cooldownTime: 0.36 * 0.8,
         },
         speed: {
             equip: 1,

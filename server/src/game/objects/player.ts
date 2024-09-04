@@ -669,8 +669,8 @@ export class Player extends BaseGameObject {
             this.scale += 0.25;
         } else if (type == "steelskin") {
             this.scale += 0.4;
-        } else if (type == "flak_jacket") {
-            this.scale += 0.2;
+        // } else if (type == "flak_jacket") {
+            // this.scale += 0.2;
         } else if (type == "small_arms") {
             this.scale -= 0.25;
         }
@@ -685,8 +685,8 @@ export class Player extends BaseGameObject {
             this.scale -= 0.25;
         } else if (type == "steelskin") {
             this.scale -= 0.4;
-        } else if (type == "flak_jacket") {
-            this.scale -= 0.2;
+        // } else if (type == "flak_jacket") {
+            // this.scale -= 0.2;
         } else if (type == "small_arms") {
             this.scale += 0.25;
         }
@@ -892,8 +892,8 @@ export class Player extends BaseGameObject {
             if (this.bleedTicker >= GameConfig.player.bleedTickRate) {
                 this.damage({
                     amount:
-                        this.game.map.mapDef.gameConfig.bleedDamage *
-                        (this.downedCount *
+                        this.game.map.mapDef.gameConfig.bleedDamage +
+                        (this.game.map.mapDef.gameConfig.bleedDamage * this.downedCount *
                             this.game.map.mapDef.gameConfig.bleedDamageMult),
                     damageType: GameConfig.DamageType.Bleeding,
                     dir: this.dir,
@@ -930,12 +930,12 @@ export class Player extends BaseGameObject {
                     const itemDef = GameObjectDefs[this.actionItem] as HealDef | BoostDef;
                     if ("heal" in itemDef) {
                         this.applyActionFunc((target: Player) => {
-                            target.health += itemDef.heal;
+                            target.health += itemDef.heal * (!this.hasPerk("aoe_heal") || target == this ? 1 : 0.4);
                         });
                     }
                     if ("boost" in itemDef) {
                         this.applyActionFunc((target: Player) => {
-                            target.boost += itemDef.boost;
+                            target.boost += itemDef.boost * (!this.hasPerk("aoe_heal") || target == this ? 1 : 0.4);
                         });
                     }
                     this.inventory[this.actionItem]--;
@@ -950,6 +950,7 @@ export class Player extends BaseGameObject {
                         if (!target.downed) return;
                         target.downed = false;
                         target.health = GameConfig.player.reviveHealth;
+                        this.game.pluginManager.emit("playerGotKillKnockOrRevived", target);
                         target.setDirty();
                         target.setGroupStatuses();
                     });
@@ -1645,7 +1646,7 @@ export class Player extends BaseGameObject {
             params.damageType !== GameConfig.DamageType.Bleeding &&
             params.damageType !== GameConfig.DamageType.Airdrop
         ) {
-            if (this.hasPerk("flak_jacket")) finalDamage *= 0.9;
+            // if (this.hasPerk("flak_jacket")) finalDamage *= 0.9;
 
             let isHeadShot = false;
 
@@ -1692,6 +1693,9 @@ export class Player extends BaseGameObject {
         }
 
         if (this._health === 0) {
+            if (params.source instanceof Player && params.source.__id !== this.__id) {
+                this.game.pluginManager.emit("playerGotKillKnockOrRevived", params.source as Player);
+            }
             if (!this.downed && this.hasPerk("self_revive")) {
                 this.down(params);
             } else {
@@ -1771,6 +1775,10 @@ export class Player extends BaseGameObject {
         downedMsg.downed = true;
 
         if (params.source instanceof Player) {
+            // const knocker = params.source as Player;
+            // if (knocker.__id !== this.__id) {
+            //     this.game.pluginManager.emit("playerGotKillKnockOrRevived", knocker);
+            // }
             this.downedBy = params.source;
             downedMsg.killerId = params.source.__id;
             downedMsg.killCreditId = params.source.__id;
@@ -2163,7 +2171,7 @@ export class Player extends BaseGameObject {
 
     /** for the medic role in 50v50 */
     getAOEPlayers(): Player[] {
-        const effectRange = this.actionType == GameConfig.Action.Revive ? 6 : 8.5;
+        const effectRange = this.actionType == GameConfig.Action.Revive ? GameConfig.player.medicReviveRange : GameConfig.player.medicHealRange;
 
         return this.game.grid
             .intersectCollider(
@@ -2195,7 +2203,7 @@ export class Player extends BaseGameObject {
         this.doAction(
             item,
             GameConfig.Action.UseItem,
-            (this.hasPerk("aoe_heal") ? 0.75 : 1) * itemDef.useTime,
+            (this.hasPerk("aoe_heal") ? 1 : 1) * itemDef.useTime,
         );
     }
 

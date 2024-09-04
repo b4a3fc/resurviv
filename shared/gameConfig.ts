@@ -165,8 +165,8 @@ export const GameConfig = {
         throwTime: 0.3,
         meleeHeight: 0.25,
         touchLootRadMult: 1.4,
-        medicHealRange: 8,
-        medicReviveRange: 6,
+        medicHealRange: 5, //8
+        medicReviveRange: 3, //6
         spectateDeadTimeout: 2,
         killLeaderMinKills: 3,
         minSpawnDistance: 50, // minimum distance enemy players need to spawn from each other

@@ -801,6 +801,7 @@ const SkinDefs = {
     }),
     helmet03_grenadier: defineSkin("helmet03", {
         name: "Grenadier Helmet",
+        role: "grenadier",
         noDrop: true,
         skinImg: {
             baseTint: 0xffffff,
@@ -817,6 +818,7 @@ const SkinDefs = {
     }),
     helmet03_bugler: defineSkin("helmet03", {
         name: "Bugler Helmet",
+        role: "bugler",
         noDrop: true,
         skinImg: {
             baseTint: 0xffffff,
@@ -833,6 +835,7 @@ const SkinDefs = {
     }),
     helmet04_medic: defineSkin("helmet04", {
         name: "Medic Helmet",
+        role: "medic",
         noDrop: true,
         skinImg: {
             baseTint: 0xffffff,
