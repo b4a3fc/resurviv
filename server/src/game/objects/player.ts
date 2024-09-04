@@ -1741,9 +1741,6 @@ export class Player extends BaseGameObject {
         }
 
         if (this._health === 0) {
-            if (params.source instanceof Player && params.source.__id !== this.__id) {
-                this.game.pluginManager.emit("playerGotKillKnockOrRevived", params.source as Player);
-            }
             if (!this.downed && this.hasPerk("self_revive")) {
                 this.down(params);
             } else {
@@ -1823,10 +1820,9 @@ export class Player extends BaseGameObject {
         downedMsg.downed = true;
 
         if (params.source instanceof Player) {
-            // const knocker = params.source as Player;
-            // if (knocker.__id !== this.__id) {
-            //     this.game.pluginManager.emit("playerGotKillKnockOrRevived", knocker);
-            // }
+            if (params.source !== this) {
+                this.game.pluginManager.emit("playerGotKillKnockOrRevived", params.source);
+            }
             this.downedBy = params.source;
             downedMsg.killerId = params.source.__id;
             downedMsg.killCreditId = params.source.__id;
@@ -1919,6 +1915,7 @@ export class Player extends BaseGameObject {
 
         if (params.source instanceof Player) {
             const source = params.source;
+            this.game.pluginManager.emit("playerGotKillKnockOrRevived", source);
             this.killedBy = source;
             if (source !== this) {
                 source.kills++;

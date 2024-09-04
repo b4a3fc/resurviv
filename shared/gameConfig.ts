@@ -158,6 +158,7 @@ export const GameConfig = {
         waterSpeedPenalty: 3,
         cookSpeedPenalty: 3,
         projectileHitPenalty: 3,
+        frozenSpeedPenalty: 3,
         hasteSpeedBonus: 4.8,
         bleedTickRate: 1,
         downedMoveSpeed: 4,
